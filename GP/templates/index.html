@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - www.codingnepalweb.com -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator HTML CSS and JavaScript | CodingNepal</title>
+    <link rel="stylesheet" href="../static/index.css">
+    <!--    <script src="gp.js" defer></script>-->
+</head>
+<body>
+<img class="background-image" src="../static/Disney.png" alt="Description of the image">
+<section class="image-generator">
+    <div class="content">
+        <h1>AI Image Generator</h1>
+
+        <form method="POST" class="generate-form" action="">
+            {{form }}
+            <!--            <label>-->
+            <!--                <input class="prompt-input" type="text" placeholder="Describe what you want to see" required>-->
+            <!--            </label>-->
+            <div class="controls">
+                <button type="submit" class="generate-btn">Generate</button>
+            </div>
+        </form>
+        {% if generated_images %}
+        <img src="data:image/PNG;base64,{{ generated_images }}" alt="My Image">
+        {% else %}
+        <p>No image available</p>
+        {% endif %}
+    </div>
+</section>
+
+
+</body>
+</html>
