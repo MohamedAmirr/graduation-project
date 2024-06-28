@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Generated Story{% endblock %}
+
+{% block content %}
+    <div class="home-container">
+        <h2>Generated Disney Story</h2>
+        {% if story_data %}
+            <h3>Generated Story:</h3>
+            <form id="save-form" method="post">
+                {% csrf_token %}
+                {% for scene in story_data.story %}
+                    <div class="scene-container{% if forloop.first %} active{% endif %}">
+                        <img src="{{ scene.image_url }}" alt="Scene Image">
+                        <p>{{ scene.paragraph }}</p>
+                    </div>
+                {% endfor %}
+                {% if user.is_authenticated %}
+                    <button type="submit" name="save" class="button">Save Story</button>
+                {% endif %}
+            </form>
+            <div class="loader" id="loader"></div>
+            <div class="navigation">
+                <button id="prev" onclick="showPrevScene()" disabled>Previous</button>
+                <button id="next" onclick="showNextScene()">Next</button>
+            </div>
+        {% endif %}
+        <a href="{% url 'home' %}" class="button">Back to Home</a>
+    </div>
+
+    <script>
+        let currentScene = 0;
+
+        function showScene(index) {
+            const scenes = document.querySelectorAll('.scene-container');
+            scenes.forEach((scene, idx) => {
+                scene.classList.toggle('active', idx === index);
+            });
+
+            document.getElementById('prev').disabled = index === 0;
+            document.getElementById('next').disabled = index === scenes.length - 1;
+        }
+
+        function showNextScene() {
+            const scenes = document.querySelectorAll('.scene-container');
+            if (currentScene < scenes.length - 1) {
+                currentScene++;
+                showScene(currentScene);
+            }
+        }
+
+        function showPrevScene() {
+            if (currentScene > 0) {
+                currentScene--;
+                showScene(currentScene);
+            }
+        }
+
+        document.getElementById('save-form').addEventListener('submit', function() {
+            document.getElementById('loader').style.display = 'block';
+        });
+    </script>
+{% endblock %}
