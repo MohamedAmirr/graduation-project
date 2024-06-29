@@ -15,7 +15,7 @@ class Story(models.Model):
 class Scene(models.Model):
     story = models.ForeignKey(Story, related_name="scenes", on_delete=models.CASCADE)
     sentence = models.TextField()
-    image = models.ImageField(upload_to="story_images/")
+    image = models.URLField()
 
     def __str__(self):
         return f"Scene for {self.story.title} - {self.sentence[:50]}"

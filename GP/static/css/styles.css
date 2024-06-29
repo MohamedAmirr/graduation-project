@@ -1,31 +1,14 @@
-/* Navbar styles */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.5);
-    padding: 10px 20px;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    z-index: 1000;
+/* Base background styles */
+body {
+    background: url('/static/images/disney_background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif; /* Consider using a more Disney-like font if available */
 }
 
-.navbar a {
-    text-decoration: none;
-    color: #333;
-    padding: 8px 16px;
-    border-radius: 5px;
-}
 
-.navbar a:hover {
-    background-color: rgba(255, 255, 255, 0.8);
-}
 
-.navbar .auth-links {
-    display: flex;
-    gap: 10px;
-}
 
 /* Center content */
 .content {
@@ -35,6 +18,59 @@
     height: 100vh;
     padding-top: 70px; /* Adjust based on navbar height */
     box-sizing: border-box;
+}
+
+/* Form container styles */
+.form-container {
+    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    margin: 20px;
+}
+
+/* Scene container styles */
+.scene-container {
+    display: none;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    height: 100%; /* Full height */
+    flex-direction: column; /* Stack image and text vertically */
+}
+
+.scene-container.active {
+    display: flex;
+}
+
+.scene-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Button styles */
+.button {
+    background-color: #4a90e2; /* Disney blue */
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    font-family: 'Arial', sans-serif; /* Consider using a more Disney-like font if available */
+}
+
+.button:hover {
+    background-color: #357ABD; /* Darker blue for hover effect */
+    transform: scale(1.05); /* Slight zoom on hover */
+}
+
+.button:active {
+    transform: scale(0.95); /* Slight press effect */
 }
 
 /* Loader styles */
@@ -58,19 +94,11 @@
 .navigation {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-top: 20px;
 }
 
-.navigation button {
-    padding: 10px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.navigation button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+.nav-left, .nav-right {
+    display: flex;
+    gap: 10px;
 }

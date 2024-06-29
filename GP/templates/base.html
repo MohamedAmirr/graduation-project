@@ -8,24 +8,7 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-<div class="navbar">
-    <div class="nav-links">
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'generate_story' %}">Generate Story</a>
-        <a href="{% url 'generate_images' %}">Generate Images</a>
-    </div>
-    <div class="auth-links">
-        {% if user.is_authenticated %}
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="button">Logout</button>
-            </form>
-        {% else %}
-            <a href="{% url 'login' %}">Login</a>
-            <a href="{% url 'register' %}">Register</a>
-        {% endif %}
-    </div>
-</div>
+{% include '_navbar.html' %}
 <div class="content">
     {% block content %}{% endblock %}
 </div>

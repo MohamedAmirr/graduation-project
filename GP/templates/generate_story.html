@@ -3,19 +3,48 @@
 {% block title %}Generate Story{% endblock %}
 
 {% block content %}
-    <div class="home-container">
+    <div class="form-container">
         <h2>Generate a Disney Story</h2>
         <form id="story-form" method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            <div class="form-group">
+                <label for="id_description">Story Description:</label>
+                {{ form.description }}
+                {% if form.errors.description %}
+                    <div class="error-messages" id="error-messages">
+                        <p>{{ form.errors.description.0 }}</p> <!-- Display the first error only -->
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_num_scenes">Number of Scenes:</label>
+                {{ form.num_scenes }}
+            </div>
             <button type="submit" class="button">Generate Story</button>
         </form>
-        <div class="loader" id="loader"></div>
+        <div class="loader" id="loader" style="display: none;"></div>
     </div>
 
     <script>
-        document.getElementById('story-form').addEventListener('submit', function() {
+        document.getElementById('story-form').addEventListener('submit', function(event) {
             document.getElementById('loader').style.display = 'block';
+
+            // Clear previous error messages
+            const errorMessages = document.getElementById('error-messages');
+            if (errorMessages) {
+                errorMessages.remove();
+            }
         });
     </script>
+
+    <style>
+        .error-messages {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ff4d4d;
+            background-color: #ffe6e6;
+            color: #ff4d4d;
+            border-radius: 5px;
+        }
+    </style>
 {% endblock %}

@@ -1,40 +1,68 @@
 {% extends "base.html" %}
 
-{% block title %}Generated Story{% endblock %}
+{% block title %}{{ story_data.title }}{% endblock %}
 
 {% block content %}
-    <div class="home-container">
-        <h2>Generated Disney Story</h2>
+    <div class="form-container">
+        <h2>{{ story_data.title }}</h2>
         {% if story_data %}
             <h3>Generated Story:</h3>
-            <form id="save-form" method="post">
-                {% csrf_token %}
+            <div id="scenes">
                 {% for scene in story_data.story %}
                     <div class="scene-container{% if forloop.first %} active{% endif %}">
-                        <img src="{{ scene.image_url }}" alt="Scene Image">
-                        <p>{{ scene.paragraph }}</p>
+                        <div class="scene-content">
+                            <img src="{{ scene.image_url }}" alt="Scene Image">
+                            <p>{{ scene.paragraph }}</p>
+                        </div>
                     </div>
                 {% endfor %}
-                {% if user.is_authenticated %}
-                    <button type="submit" name="save" class="button">Save Story</button>
-                {% endif %}
-            </form>
-            <div class="loader" id="loader"></div>
-            <div class="navigation">
-                <button id="prev" onclick="showPrevScene()" disabled>Previous</button>
-                <button id="next" onclick="showNextScene()">Next</button>
             </div>
+            <div class="navigation">
+                <div class="nav-left">
+                    {% if user.is_authenticated %}
+                        {% if not is_saved %}
+                            <form id="save-form" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" name="save" class="button">Save Story</button>
+                            </form>
+                        {% endif %}
+                        <button id="send-story-btn" class="button">Send Story</button>
+                    {% endif %}
+                    <a href="{% url 'home' %}" class="button">Back to Home</a>
+                </div>
+                <div class="nav-right">
+                    <button id="prev" onclick="showPrevScene()" class="button" disabled>Previous</button>
+                    <button id="next" onclick="showNextScene()" class="button">Next</button>
+                </div>
+            </div>
+            <div class="loader" id="loader"></div>
         {% endif %}
-        <a href="{% url 'home' %}" class="button">Back to Home</a>
+    </div>
+
+    <!-- Popup Form -->
+    <div id="send-story-popup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="closePopup()">&times;</span>
+            <h2>Send Story</h2>
+            <form id="send-story-form">
+                <label for="email">Enter the email of an existing user:</label>
+                <input type="email" id="email" name="email" required>
+                <button type="submit" class="button">Send</button>
+            </form>
+            <div id="email-error" class="error-message"></div>
+        </div>
     </div>
 
     <script>
         let currentScene = 0;
+        let storyData = '{{ story }}'; // Pass the story data as a JavaScript object
+        storyData = JSON.parse(storyData.replace(/&quot;/g,'"'));
 
         function showScene(index) {
             const scenes = document.querySelectorAll('.scene-container');
             scenes.forEach((scene, idx) => {
                 scene.classList.toggle('active', idx === index);
+                scene.style.display = idx === index ? 'flex' : 'none';
             });
 
             document.getElementById('prev').disabled = index === 0;
@@ -56,8 +84,96 @@
             }
         }
 
-        document.getElementById('save-form').addEventListener('submit', function() {
-            document.getElementById('loader').style.display = 'block';
+        const saveForm = document.getElementById('save-form');
+        if (saveForm) {
+            saveForm.addEventListener('submit', function() {
+                document.getElementById('loader').style.display = 'block';
+            });
+        }
+
+        // Initial display setting
+        document.addEventListener('DOMContentLoaded', function() {
+            showScene(currentScene);
+        });
+
+        // Popup functionality
+        document.getElementById('send-story-btn').addEventListener('click', function() {
+            document.getElementById('send-story-popup').style.display = 'block';
+        });
+
+        function closePopup() {
+            document.getElementById('send-story-popup').style.display = 'none';
+        }
+
+        document.getElementById('send-story-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+
+            // AJAX request to check if the email exists
+            fetch("{% url 'check_user_email' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify({ email: email, story_data: storyData }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        // Story sent successfully
+                        alert("Story sent successfully!");
+                        closePopup();
+                    } else {
+                        document.getElementById('email-error').innerText = "User does not exist.";
+                    }
+                });
         });
     </script>
+
+    <style>
+        /* Popup styles */
+        .popup {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .popup-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
 {% endblock %}
