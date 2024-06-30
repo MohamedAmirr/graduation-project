@@ -3,13 +3,16 @@ import json
 import ast
 import uuid
 
+import openai
 from PIL import Image, ImageDraw, ImageFont
 
 # from io import BytesIO
 # from django.contrib.auth.decorators import login_required
 # from django.shortcuts import render
-# from diffusers import DiffusionPipeline, AutoencoderKL
-# import torch
+from diffusers import DiffusionPipeline, AutoencoderKL
+
+import torch
+
 # from PIL import Image
 # import matplotlib.pyplot as plt
 # from django.views.decorators.csrf import csrf_exempt
@@ -26,6 +29,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from GP import settings
 from home.forms import StoryForm
+from home.helpers import check_words
 from home.models import Scene, Story
 
 
@@ -52,18 +56,19 @@ def generate_story(keywords, num_scenes):
 
 
 def generate_image(prompt):
+    pass
     # Create an image with Pillow (replace this with your actual image generation logic)
-    img = Image.new("RGB", (300, 300), color=(73, 109, 137))
-    d = ImageDraw.Draw(img)
-    d.text((10, 10), prompt, fill=(255, 255, 0))
-
-    # Save the image to the server
-    image_name = f"{uuid.uuid4()}.png"
-    image_path = os.path.join(settings.MEDIA_ROOT, image_name)
-    img.save(image_path)
-
-    # Return the relative path to the image
-    return os.path.join(settings.MEDIA_URL, image_name)
+    # img = Image.new("RGB", (300, 300), color=(73, 109, 137))
+    # d = ImageDraw.Draw(img)
+    # d.text((10, 10), prompt, fill=(255, 255, 0))
+    #
+    # # Save the image to the server
+    # image_name = f"{uuid.uuid4()}.png"
+    # image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+    # img.save(image_path)
+    #
+    # # Return the relative path to the image
+    # return os.path.join(settings.MEDIA_URL, image_name)
 
 
 def generate_story_view(request):
@@ -105,50 +110,127 @@ def image_grid(imgs, rows, cols, resize=256):
     # plt.show()
 
 
+def generate_images_page(request):
+    return render(request, "generate_images.html")
+
+
+def save_image(image, prompt):
+    # Create a directory for saving images
+    media_dir = "media/generated_images"
+    if not os.path.exists(media_dir):
+        os.makedirs(media_dir)
+
+    # Save the image
+    image_name = f"{prompt[:50].replace(' ', '_')}.png"
+    image_path = os.path.join(media_dir, image_name)
+    image.save(image_path)
+
+    return image_path
+
+
 @csrf_exempt
 def generate_images(request):
-    pass
-    # if request.method == "POST":
-    #     form = MyForm(request.POST)
-    #     if form.is_valid():
-    #         vae = AutoencoderKL.from_pretrained(
-    #             "madebyollin/sdxl-vae-fp16-fix",
-    #             # torch_dtype=torch.float32
-    #         )
-    #
-    #         pipe = DiffusionPipeline.from_pretrained(
-    #             "stabilityai/stable-diffusion-xl-base-1.0",
-    #             # vae=vae,
-    #             # torch_dtype=torch.float16,
-    #             # variant="fp16",
-    #             # use_safetensors=True,
-    #         )
-    #         # pipe = pipe.to("cuda")
-    #         prompt = form.cleaned_data["story"]
-    #
-    #         # images = pipe(prompt=prompt, num_inference_steps=25, num_images_per_prompt=1)
-    #         # image = images.images[0]
-    #         img_str = []
-    #         image = Image.new("RGB", (200, 100), color="red")
-    #         draw = ImageDraw.Draw(image)
-    #         draw.text((10, 10), "Hello", fill="white")
-    #         buffered = BytesIO()
-    #         image.save(buffered, format="PNG")
-    #         img_str.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
-    #
-    #         image = Image.new("RGB", (200, 100), color="blue")
-    #         draw = ImageDraw.Draw(image)
-    #         draw.text((10, 10), "Hello", fill="white")
-    #         buffered = BytesIO()
-    #         image.save(buffered, format="PNG")
-    #         img_str.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
-    #
-    #         # image_grid(image.images, 1, 1)
-    #         return render(request, "index.html", {"generated_images": img_str})
-    # else:
-    #     form = MyForm()
-    #
-    # return render(request, "index.html", {"form": form})
+    if request.method == "POST":
+        scenes = request.POST.getlist("scenes[]")
+
+        # Check for abusive content
+        if any(check_words(scene) == "yes" for scene in scenes):
+            return JsonResponse({"error": "Abusive content detected"}, status=400)
+
+        # Generate prompts using OpenAI API
+        prompts = []
+        for scene in scenes:
+            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            example_json = {"title": "", "story": [{"paragraph": "", "prompt": ""}]}
+
+            chat_completion = client.chat.completions.create(
+                model="gpt-3.5-turbo-1106",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a story writer, provide output in valid JSON. The home schema should be like this: "
+                        + json.dumps(example_json),
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Create a prompt for the scene: {scene}",
+                    },
+                ],
+            )
+            response = chat_completion.choices[0].message.content
+            prompt_json = json.loads(response)
+            prompts.append(prompt_json["story"][0]["prompt"])
+
+        # Generate images using the provided code
+        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix")
+        pipe = DiffusionPipeline.from_pretrained(
+            "stabilityai/stable-diffusion-xl-base-1.0",
+            vae=vae,
+            torch_dtype=torch.float16,
+            use_safetensors=True,
+        )
+
+        image_urls = []
+        for prompt in prompts:
+            image = pipe(prompt, num_inference_steps=20).images[0]
+            image_path = save_image(image, prompt)
+            image_urls.append(image_path)
+
+        # Save story data in session for display
+        request.session["story_data"] = {
+            "title": "Generated Story",
+            "story": [
+                {"paragraph": scene, "image_url": image_url}
+                for scene, image_url in zip(scenes, image_urls)
+            ],
+        }
+
+        return JsonResponse({"images": image_urls})
+
+
+# @csrf_exempt
+# def generate_images(request):
+#     if request.method == "POST":
+#         form = MyForm(request.POST)
+#         if form.is_valid():
+#             vae = AutoencoderKL.from_pretrained(
+#                 "madebyollin/sdxl-vae-fp16-fix",
+#                 # torch_dtype=torch.float32
+#             )
+#
+#             pipe = DiffusionPipeline.from_pretrained(
+#                 "stabilityai/stable-diffusion-xl-base-1.0",
+#                 # vae=vae,
+#                 # torch_dtype=torch.float16,
+#                 # variant="fp16",
+#                 # use_safetensors=True,
+#             )
+#             # pipe = pipe.to("cuda")
+#             prompt = form.cleaned_data["story"]
+#
+#             # images = pipe(prompt=prompt, num_inference_steps=25, num_images_per_prompt=1)
+#             # image = images.images[0]
+#             img_str = []
+#             image = Image.new("RGB", (200, 100), color="red")
+#             draw = ImageDraw.Draw(image)
+#             draw.text((10, 10), "Hello", fill="white")
+#             buffered = BytesIO()
+#             image.save(buffered, format="PNG")
+#             img_str.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
+#
+#             image = Image.new("RGB", (200, 100), color="blue")
+#             draw = ImageDraw.Draw(image)
+#             draw.text((10, 10), "Hello", fill="white")
+#             buffered = BytesIO()
+#             image.save(buffered, format="PNG")
+#             img_str.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
+#
+#             # image_grid(image.images, 1, 1)
+#             return render(request, "index.html", {"generated_images": img_str})
+#     else:
+#         form = MyForm()
+#
+#     return render(request, "index.html", {"form": form})
 
 
 def home(request):

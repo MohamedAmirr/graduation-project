@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Images{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2 class="text-center">Generate Images</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="generate-images-form">
+                            <div id="scenes-container" class="mb-3">
+                                <div class="form-group">
+                                    <label for="scene-1">Scene 1</label>
+                                    <input type="text" class="form-control" id="scene-1" name="scenes[]" placeholder="Enter the first scene">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary mb-3" id="add-scene-btn">Add Scene</button>
+                            <button type="submit" class="btn btn-primary">Generate</button>
+                        </form>
+                        <div id="images-container" class="mt-5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let sceneCount = 1;
+
+            document.getElementById('add-scene-btn').addEventListener('click', function() {
+                sceneCount++;
+                const sceneContainer = document.getElementById('scenes-container');
+                const newScene = document.createElement('div');
+                newScene.classList.add('form-group');
+                newScene.innerHTML = `
+            <label for="scene-${sceneCount}">Scene ${sceneCount}</label>
+            <input type="text" class="form-control" id="scene-${sceneCount}" name="scenes[]" placeholder="Enter scene ${sceneCount}">
+        `;
+                sceneContainer.appendChild(newScene);
+            });
+
+            document.getElementById('generate-images-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+
+                fetch("{% url 'generate_images' %}", {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            const imagesContainer = document.getElementById('images-container');
+                            imagesContainer.innerHTML = '';
+                            data.images.forEach(imageUrl => {
+                                const img = document.createElement('img');
+                                img.src = `/${imageUrl}`;
+                                img.classList.add('img-fluid', 'mb-3');
+                                imagesContainer.appendChild(img);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+{% endblock %}
