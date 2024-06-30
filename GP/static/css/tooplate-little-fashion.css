@@ -332,7 +332,7 @@ strong {
   top: 0;
   right: 0;
   left: 0;
-  padding: 25px 0;
+  /*padding: 25px 0;*/
   z-index: 2;
   will-change: transform;
   transition: transform 300ms linear;

@@ -3,10 +3,20 @@
 {% block title %}My Stories{% endblock %}
 
 {% block content %}
-    <h2>My Stories</h2>
-    <ul>
-        {% for story in stories %}
-            <li><a href="{% url 'story_detail' story.id %}">{{ story.title }}</a></li>
-        {% endfor %}
-    </ul>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 mt-5">
+                <h2 class="text-center">My Stories</h2>
+                <div class="stories-container">
+                    <ul class="list-group">
+                        {% for story in stories %}
+                            <li class="list-group-item">
+                                <a href="{% url 'story_detail' story.id %}">{{ story.title }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

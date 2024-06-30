@@ -3,40 +3,50 @@
 {% block title %}{{ story_data.title }}{% endblock %}
 
 {% block content %}
-    <div class="form-container">
-        <h2>{{ story_data.title }}</h2>
-        {% if story_data %}
-            <h3>Generated Story:</h3>
-            <div id="scenes">
-                {% for scene in story_data.story %}
-                    <div class="scene-container{% if forloop.first %} active{% endif %}">
-                        <div class="scene-content">
-                            <img src="{{ scene.image_url }}" alt="Scene Image">
-                            <p>{{ scene.paragraph }}</p>
-                        </div>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card mt-5">
+                    <div class="card-header text-center">
+                        <h2>{{ story_data.title }}</h2>
                     </div>
-                {% endfor %}
-            </div>
-            <div class="navigation">
-                <div class="nav-left">
-                    {% if user.is_authenticated %}
-                        {% if not is_saved %}
-                            <form id="save-form" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" name="save" class="button">Save Story</button>
-                            </form>
+                    <div class="card-body text-center">
+                        {% if story_data %}
+                            <h3>Generated Story:</h3>
+                            <div id="scenes" class="d-flex justify-content-center align-items-center flex-column">
+                                {% for scene in story_data.story %}
+                                    <div class="scene-container{% if forloop.first %} active{% endif %}" style="display: none;">
+                                        <div class="scene-content">
+                                            <img src="{{ scene.image_url }}" alt="Scene Image" class="img-fluid mb-3">
+                                            <p>{{ scene.paragraph }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex justify-content-between mt-3">
+                                <div>
+                                    {% if user.is_authenticated %}
+                                        {% if not is_saved %}
+                                            <form id="save-form" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" name="save" class="btn btn-primary">Save Story</button>
+                                            </form>
+                                        {% endif %}
+                                        <button id="send-story-btn" class="btn btn-secondary">Send Story</button>
+                                    {% endif %}
+                                    <a href="{% url 'home' %}" class="btn btn-light">Back to Home</a>
+                                </div>
+                                <div>
+                                    <button id="prev" onclick="showPrevScene()" class="btn btn-primary" disabled>Previous</button>
+                                    <button id="next" onclick="showNextScene()" class="btn btn-primary">Next</button>
+                                </div>
+                            </div>
+                            <div class="loader" id="loader" style="display: none;"></div>
                         {% endif %}
-                        <button id="send-story-btn" class="button">Send Story</button>
-                    {% endif %}
-                    <a href="{% url 'home' %}" class="button">Back to Home</a>
-                </div>
-                <div class="nav-right">
-                    <button id="prev" onclick="showPrevScene()" class="button" disabled>Previous</button>
-                    <button id="next" onclick="showNextScene()" class="button">Next</button>
+                    </div>
                 </div>
             </div>
-            <div class="loader" id="loader"></div>
-        {% endif %}
+        </div>
     </div>
 
     <!-- Popup Form -->
@@ -46,8 +56,8 @@
             <h2>Send Story</h2>
             <form id="send-story-form">
                 <label for="email">Enter the email of an existing user:</label>
-                <input type="email" id="email" name="email" required>
-                <button type="submit" class="button">Send</button>
+                <input type="email" id="email" name="email" class="form-control" required>
+                <button type="submit" class="btn btn-primary mt-2">Send</button>
             </form>
             <div id="email-error" class="error-message"></div>
         </div>
@@ -174,6 +184,28 @@
         .error-message {
             color: red;
             margin-top: 10px;
+        }
+
+        .scene-container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .scene-container.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scene-content img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .scene-content p {
+            text-align: justify;
         }
     </style>
 {% endblock %}

@@ -173,8 +173,16 @@ def display_story_view(request):
             sentence = scene_data.get("paragraph", "")
             image_url = scene_data.get("image_url", "")
             Scene.objects.create(story=story, sentence=sentence, image=image_url)
-
-        return redirect("home")  # Redirect to home or any other page after saving
+        is_saved = True
+        return render(
+            request,
+            "display_story.html",
+            {
+                "story_data": story_data,
+                "story": json.dumps(story_data),
+                "is_saved": is_saved,
+            },
+        )
 
     return render(
         request,
