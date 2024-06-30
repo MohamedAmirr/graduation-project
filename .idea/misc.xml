@@ -3,7 +3,7 @@
   <component name="Black">
     <option name="enabledOnReformat" value="true" />
     <option name="enabledOnSave" value="true" />
-    <option name="sdkUUID" value="5a2fa591-e33b-434d-977e-ba18737dbd2a" />
+    <option name="sdkName" value="Python 3.12 (graduation-project)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (graduation-project)" project-jdk-type="Python SDK" />
 </project>
