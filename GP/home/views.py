@@ -26,6 +26,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from diffusers import AutoPipelineForText2Image, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline
+import torch
+
 
 from GP import settings
 from home.forms import StoryForm
@@ -160,21 +163,27 @@ def generate_images(request):
             response = chat_completion.choices[0].message.content
             prompt_json = json.loads(response)
             prompts.append(prompt_json["story"][0]["prompt"])
+            
+        pipe = StableDiffusionXLPipeline.from_single_file(
+        "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors", 
+        torch_dtype=torch.float16, variant="fp16", use_safetensors=True
+        ).to("cuda")
 
         # Generate images using the provided code
-        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix")
-        pipe = DiffusionPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0",
-            vae=vae,
-            torch_dtype=torch.float16,
-            use_safetensors=True,
-        )
+        # vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix")
+        # pipe = DiffusionPipeline.from_pretrained(
+        #     "stabilityai/stable-diffusion-xl-base-1.0",
+        #     vae=vae,
+        #     torch_dtype=torch.float16,
+        #     use_safetensors=True,
+        # )
 
         image_urls = []
         for prompt in prompts:
-            image = pipe(prompt, num_inference_steps=20).images[0]
+            image = pipe(prompt, num_inference_steps=1).images[0]
             image_path = save_image(image, prompt)
             image_urls.append(image_path)
+            
 
         # Save story data in session for display
         request.session["story_data"] = {
