@@ -1,6 +1,7 @@
 # import base64
 import json
 import ast
+import random
 import uuid
 
 import openai
@@ -26,7 +27,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from diffusers import AutoPipelineForText2Image, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline
+from diffusers import (
+    AutoPipelineForText2Image,
+    StableDiffusionXLPipeline,
+    StableDiffusionXLImg2ImgPipeline,
+)
 import torch
 
 
@@ -58,22 +63,6 @@ def generate_story(keywords, num_scenes):
     return json.loads(chat_completion.choices[0].message.content)
 
 
-def generate_image(prompt):
-    pass
-    # Create an image with Pillow (replace this with your actual image generation logic)
-    # img = Image.new("RGB", (300, 300), color=(73, 109, 137))
-    # d = ImageDraw.Draw(img)
-    # d.text((10, 10), prompt, fill=(255, 255, 0))
-    #
-    # # Save the image to the server
-    # image_name = f"{uuid.uuid4()}.png"
-    # image_path = os.path.join(settings.MEDIA_ROOT, image_name)
-    # img.save(image_path)
-    #
-    # # Return the relative path to the image
-    # return os.path.join(settings.MEDIA_URL, image_name)
-
-
 def generate_story_view(request):
     if request.method == "POST":
         form = StoryForm(request.POST)
@@ -84,7 +73,7 @@ def generate_story_view(request):
 
             # Generate images for each scene
             for scene in story_data["story"]:
-                scene["image_url"] = generate_image(scene["prompt"])
+                scene["image_url"] = generate_random_image(scene["prompt"])
 
             # Save story data to session
             request.session["story_data"] = story_data
@@ -97,41 +86,7 @@ def generate_story_view(request):
     return render(request, "generate_story.html", {"form": form})
 
 
-def image_grid(imgs, rows, cols, resize=256):
-    pass
-    # assert len(imgs) == rows * cols
-    #
-    # if resize is not None:
-    #     imgs = [img.resize((resize, resize)) for img in imgs]
-    #
-    # plt.figure(figsize=(20, 20))
-    #
-    # for index, image in enumerate(imgs):
-    #     ax = plt.subplot(1, len(imgs), index + 1)
-    #     plt.imshow(image)
-    #     plt.axis("off")
-    # plt.show()
-
-
-def generate_images_page(request):
-    return render(request, "generate_images.html")
-
-
-def save_image(image, prompt):
-    # Create a directory for saving images
-    media_dir = "media/generated_images"
-    if not os.path.exists(media_dir):
-        os.makedirs(media_dir)
-
-    # Save the image
-    image_name = f"{prompt[:50].replace(' ', '_')}.png"
-    image_path = os.path.join(media_dir, image_name)
-    image.save(image_path)
-
-    return image_path
-
-
-@csrf_exempt
+# @csrf_exempt
 def generate_images(request):
     if request.method == "POST":
         scenes = request.POST.getlist("scenes[]")
@@ -142,6 +97,7 @@ def generate_images(request):
 
         # Generate prompts using OpenAI API
         prompts = []
+        title = "Generated Story"  # Default title if not retrieved from API
         for scene in scenes:
             client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             example_json = {"title": "", "story": [{"paragraph": "", "prompt": ""}]}
@@ -163,38 +119,126 @@ def generate_images(request):
             response = chat_completion.choices[0].message.content
             prompt_json = json.loads(response)
             prompts.append(prompt_json["story"][0]["prompt"])
-            
-        pipe = StableDiffusionXLPipeline.from_single_file(
-        "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors", 
-        torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-        ).to("cuda")
+            if "title" in prompt_json:
+                title = prompt_json[
+                    "title"
+                ]  # Retrieve the title from API response if present
+
+        # Load the StableDiffusionXLPipeline
+        # pipe = StableDiffusionXLPipeline.from_single_file(
+        #     "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
+        #     torch_dtype=torch.float16,
+        #     variant="fp16",
+        #     use_safetensors=True,
+        # ).to("cuda")
 
         # Generate images using the provided code
-        # vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix")
-        # pipe = DiffusionPipeline.from_pretrained(
-        #     "stabilityai/stable-diffusion-xl-base-1.0",
-        #     vae=vae,
-        #     torch_dtype=torch.float16,
-        #     use_safetensors=True,
-        # )
-
         image_urls = []
         for prompt in prompts:
-            image = pipe(prompt, num_inference_steps=1).images[0]
-            image_path = save_image(image, prompt)
-            image_urls.append(image_path)
-            
+            # image = pipe(prompt, num_inference_steps=1).images[0]
+            # image_path = save_image(image, prompt)
+            # image_urls.append(image_path)
+            image_urls.append(generate_random_image("hello"))
 
         # Save story data in session for display
         request.session["story_data"] = {
-            "title": "Generated Story",
+            "title": title,
             "story": [
                 {"paragraph": scene, "image_url": image_url}
                 for scene, image_url in zip(scenes, image_urls)
             ],
         }
 
-        return JsonResponse({"images": image_urls})
+        return redirect("display_story")
+
+    return render(request, "generate_images.html")
+
+
+def display_story_view(request):
+    story_data = request.session.get("story_data")
+    description = request.session.get("description")
+
+    if (
+        request.method == "POST"
+        and request.user.is_authenticated
+        and "save" in request.POST
+    ):
+        # Create and save the story for authenticated users
+        story = Story.objects.create(title=story_data["title"], description=description)
+        story.users.add(request.user)
+
+        # Create and save the scenes
+        for scene_data in story_data.get("story", []):
+            sentence = scene_data.get("paragraph", "")
+            image_url = scene_data.get("image_url", "")
+
+            Scene.objects.create(story=story, sentence=sentence, image=image_url)
+        is_saved = True
+        return render(
+            request,
+            "display_story.html",
+            {
+                "story_data": story_data,
+                "story": json.dumps(story_data),
+                "is_saved": is_saved,
+            },
+        )
+
+    return render(
+        request,
+        "display_story.html",
+        {"story_data": story_data, "story": json.dumps(story_data)},
+    )
+
+
+def save_image(image, prompt):
+    # Create a directory for saving images
+    media_dir = "media/generated_images"
+    if not os.path.exists(media_dir):
+        os.makedirs(media_dir)
+
+    # Save the image
+    image_name = f"{prompt[:50].replace(' ', '_')}.png"
+    image_path = os.path.join(media_dir, image_name)
+    image.save(image_path)
+
+    return image_path
+
+
+def generate_image(prompt):
+    pass
+    # Create an image with Pillow (replace this with your actual image generation logic)
+    # img = Image.new("RGB", (300, 300), color=(73, 109, 137))
+    # d = ImageDraw.Draw(img)
+    # d.text((10, 10), prompt, fill=(255, 255, 0))
+    #
+    # # Save the image to the server
+    # image_name = f"{uuid.uuid4()}.png"
+    # image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+    # img.save(image_path)
+    #
+    # # Return the relative path to the image
+    # return os.path.join(settings.MEDIA_URL, image_name)
+
+
+def generate_random_image(prompt):
+    width, height = 512, 512  # Example dimensions for the generated images
+    image = Image.new(
+        "RGB",
+        (width, height),
+        color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
+    )
+    draw = ImageDraw.Draw(image)
+    draw.text((10, 10), prompt, fill=(255, 255, 255))
+
+    # Ensure the media directory exists
+    image_name = f"{uuid.uuid4()}.png"
+    image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+
+    image.save(image_path)
+
+    # Return the relative path for use in templates
+    return os.path.join(settings.MEDIA_URL, image_name)
 
 
 # @csrf_exempt
@@ -246,42 +290,6 @@ def home(request):
     return render(request, "home/home.html")
 
 
-def display_story_view(request):
-    story_data = request.session.get("story_data")
-    description = request.session.get("description")
-
-    if (
-        request.method == "POST"
-        and request.user.is_authenticated
-        and "save" in request.POST
-    ):
-        # Create and save the story for authenticated users
-        story = Story.objects.create(title=story_data["title"], description=description)
-        story.users.add(request.user)
-
-        # Create and save the scenes
-        for scene_data in story_data.get("story", []):
-            sentence = scene_data.get("paragraph", "")
-            image_url = scene_data.get("image_url", "")
-            Scene.objects.create(story=story, sentence=sentence, image=image_url)
-        is_saved = True
-        return render(
-            request,
-            "display_story.html",
-            {
-                "story_data": story_data,
-                "story": json.dumps(story_data),
-                "is_saved": is_saved,
-            },
-        )
-
-    return render(
-        request,
-        "display_story.html",
-        {"story_data": story_data, "story": json.dumps(story_data)},
-    )
-
-
 User = get_user_model()
 
 
@@ -327,6 +335,8 @@ def story_detail_view(request, story_id):
             {"image_url": scene.image, "paragraph": scene.sentence} for scene in scenes
         ],
     }
+    print("hoba", story_data)
+
     is_saved = story.id is not None
     return render(
         request,
@@ -337,3 +347,19 @@ def story_detail_view(request, story_id):
             "is_saved": is_saved,
         },
     )
+
+
+def image_grid(imgs, rows, cols, resize=256):
+    pass
+    # assert len(imgs) == rows * cols
+    #
+    # if resize is not None:
+    #     imgs = [img.resize((resize, resize)) for img in imgs]
+    #
+    # plt.figure(figsize=(20, 20))
+    #
+    # for index, image in enumerate(imgs):
+    #     ax = plt.subplot(1, len(imgs), index + 1)
+    #     plt.imshow(image)
+    #     plt.axis("off")
+    # plt.show()

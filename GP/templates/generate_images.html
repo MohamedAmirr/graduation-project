@@ -9,7 +9,8 @@
                 <h2 class="text-center">Generate Images</h2>
                 <div class="card">
                     <div class="card-body">
-                        <form id="generate-images-form">
+                        <form id="generate-images-form" method="POST" action="{% url 'generate_images' %}">
+                            {% csrf_token %}
                             <div id="scenes-container" class="mb-3">
                                 <div class="form-group">
                                     <label for="scene-1">Scene 1</label>
@@ -36,36 +37,10 @@
                 const newScene = document.createElement('div');
                 newScene.classList.add('form-group');
                 newScene.innerHTML = `
-            <label for="scene-${sceneCount}">Scene ${sceneCount}</label>
-            <input type="text" class="form-control" id="scene-${sceneCount}" name="scenes[]" placeholder="Enter scene ${sceneCount}">
-        `;
+                    <label for="scene-${sceneCount}">Scene ${sceneCount}</label>
+                    <input type="text" class="form-control" id="scene-${sceneCount}" name="scenes[]" placeholder="Enter scene ${sceneCount}">
+                `;
                 sceneContainer.appendChild(newScene);
-            });
-
-            document.getElementById('generate-images-form').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(this);
-
-                fetch("{% url 'generate_images' %}", {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            alert(data.error);
-                        } else {
-                            const imagesContainer = document.getElementById('images-container');
-                            imagesContainer.innerHTML = '';
-                            data.images.forEach(imageUrl => {
-                                const img = document.createElement('img');
-                                img.src = `/${imageUrl}`;
-                                img.classList.add('img-fluid', 'mb-3');
-                                imagesContainer.appendChild(img);
-                            });
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
             });
         });
     </script>

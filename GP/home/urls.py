@@ -10,13 +10,11 @@ from .views import (
     check_user_email,
     user_stories_view,
     story_detail_view,
-    generate_images_page,
 )
 
 urlpatterns = [
     path("generate-story/", generate_story_view, name="generate_story"),
-    path("generate_images/", generate_images_page, name="generate_images_page"),
-    path("generate_images/api/", generate_images, name="generate_images"),
+    path("generate_images/", generate_images, name="generate_images"),
     path("display-story/", display_story_view, name="display_story"),
     path("", home, name="home"),
     path("check_user_email/", check_user_email, name="check_user_email"),
