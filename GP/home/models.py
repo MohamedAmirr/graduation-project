@@ -5,7 +5,7 @@ from authentication.models import Account
 
 class Story(models.Model):
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(null=True)
     users = models.ManyToManyField(Account, related_name="stories")
 
     def __str__(self):
