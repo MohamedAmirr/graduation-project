@@ -1,13 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Generate Images{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
+    <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <h2 class="text-center">Generate Images</h2>
-                <div class="card">
+                <div class="card mt-5">
+                    <div class="card-header">
+                        <h2 class="text-center">Generate Images</h2>
+                    </div>
                     <div class="card-body">
                         <form id="generate-images-form" method="POST" action="{% url 'generate_images' %}">
                             {% csrf_token %}

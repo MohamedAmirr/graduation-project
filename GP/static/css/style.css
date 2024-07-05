@@ -1,14 +1,91 @@
 /* General Styles */
 body {
-    background-color: #f8f9fa;
     font-family: 'Arial', sans-serif;
-    padding-top: 0px; /* Adjust for fixed navbar height */
-    /*background: url('');*/
+    padding-top: 200px; /* Adjust for fixed navbar height */
+    background: rgba(0, 0, 0, 0.6) url('../images/66.jpg'); /* Adjust alpha (opacity) value */
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
+/* Container for register components */
+.register-container {
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for depth */
+    border-radius: 8px; /* Optional: Add rounded corners */
+    color: #000000; /* Black font color */
+    padding: 20px; /* Padding inside the container */
+}
+
+.register-container h2 {
+    font-size: 28px; /* Adjust heading font size */
+}
+
+.register-container .form-group label {
+    color: #000000; /* Black font color for labels */
+}
+
+.register-container .btn-primary {
+    background-color: #0056b3; /* Primary button background color */
+    border-color: #0056b3; /* Primary button border color */
+}
+
+.register-container .btn-primary:hover {
+    background-color: #004499; /* Darker shade on hover */
+    border-color: #004499; /* Darker shade border on hover */
+}
+
+.register-container a {
+    color: #0056b3; /* Link color */
+}
+
+.register-container a:hover {
+    text-decoration: underline; /* Underline link on hover */
+}
+
+/* Container for login components */
+.login-container {
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for depth */
+    border-radius: 8px; /* Optional: Add rounded corners */
+    color: #000000; /* Black font color */
+    padding: 20px; /* Padding inside the container */
+}
+
+.login-container h2 {
+    font-size: 28px; /* Adjust heading font size */
+}
+
+.login-container .form-group label {
+    color: #000000; /* Black font color for labels */
+}
+
+.login-container .btn-primary {
+    background-color: #0056b3; /* Primary button background color */
+    border-color: #0056b3; /* Primary button border color */
+}
+
+.login-container .btn-primary:hover {
+    background-color: #004499; /* Darker shade on hover */
+    border-color: #004499; /* Darker shade border on hover */
+}
+
+.login-container a {
+    color: #0056b3; /* Link color */
+}
+
+.login-container a:hover {
+    text-decoration: underline; /* Underline link on hover */
+}
+
+.welcome-heading {
+    color: #ffffff; /* Adjust color code as desired */
+}
+.intro-text {
+    color: #ffffff; /* Adjust color code as desired */
+}
 /* Navbar Styles */
 .navbar {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgb(255, 255, 255);
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -33,6 +110,14 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.welcome-heading {
+    font-size: 60px;
+}
+
+.intro-text {
+    font-size: 16px;
+}
+
 /* Form Container Styles */
 .form-container {
     margin: 30px 0;
@@ -40,6 +125,7 @@ body {
 
 .form-container h2 {
     margin-bottom: 20px;
+    color: #ffffff; /* Set font color for h2 */
 }
 
 .form-container .form-group {
@@ -178,8 +264,9 @@ body {
 
 .footer {
     color: white;
-    padding: 20px 0;
+    padding: 10px 0;
     flex-shrink: 0;
+    font-size: 9px; 
 }
 
 .footer .container {
@@ -191,7 +278,7 @@ body {
 }
 
 .footer h5 {
-    margin-bottom: 20px;
+    margin-bottom: 0px;
     font-size: 1.2rem;
     font-weight: bold;
 }
@@ -213,8 +300,9 @@ body {
 
 .footer .bg-secondary {
     background-color: rgba(0, 0, 0, 0.2);
-    padding: 10px 0;
+    padding: 0px 0;
 }
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -250,11 +338,24 @@ body {
 .stories-container::-webkit-scrollbar-thumb:hover {
     background-color: #555;
 }
+
 /* Form Styles */
 .form-control {
     margin-bottom: 10px;
+    color: #ffffff; /* Adjust font color */
 }
 
 .btn-block {
     width: 100%;
+}
+
+/* Link Styles */
+.text-white {
+    color: #ffffff; /* Set link color to white */
+    text-decoration: none; /* Remove underline */
+    transition: color 0.3s;
+}
+
+.text-white:hover {
+    color: #bbb; /* Change color on hover */
 }

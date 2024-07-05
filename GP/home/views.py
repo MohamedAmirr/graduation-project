@@ -56,7 +56,7 @@ def generate_story(keywords, num_scenes):
             },
             {
                 "role": "user",
-                "content": f"Create a story with {num_scenes} scenes using Disney characters based on this description: {keywords}",
+                "content": f"Create a story with {num_scenes} scenes using  a single cartoon character in each prompt based on this description: {keywords}",
             },
         ],
     )
@@ -67,6 +67,7 @@ def generate_story_view(request):
     if request.method == "POST":
         torch.cuda.empty_cache()
         # Load the StableDiffusionXLPipeline
+        print("1")
         pipe = StableDiffusionXLPipeline.from_single_file(
              "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
              torch_dtype=torch.float16,
@@ -96,7 +97,7 @@ def generate_story_view(request):
 
 
 def generate_image_using_prompt(prompt, pipe):
-    image = pipe(prompt, num_inference_steps=1).images[0]
+    image = pipe(prompt, num_inference_steps=35).images[0]
     image_name = f"{uuid.uuid4()}.png"
     image_path = os.path.join(settings.MEDIA_ROOT, image_name)
     image.save(image_path)
