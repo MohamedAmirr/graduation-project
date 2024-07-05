@@ -56,7 +56,7 @@ def generate_story(keywords, num_scenes):
             },
             {
                 "role": "user",
-                "content": f"Create a story with {num_scenes} scenes using Disney characters based on this description: {keywords}",
+                "content": f"Create a story with {num_scenes} scenes using  a single cartoon character in each prompt based on this description: {keywords}",
             },
         ],
     )
@@ -65,15 +65,25 @@ def generate_story(keywords, num_scenes):
 
 def generate_story_view(request):
     if request.method == "POST":
+        torch.cuda.empty_cache()
+        # Load the StableDiffusionXLPipeline
+        print("1")
+        pipe = StableDiffusionXLPipeline.from_single_file(
+             "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
+             torch_dtype=torch.float16,
+             variant="fp16",
+             use_safetensors=True,
+         ).to("cuda")
         form = StoryForm(request.POST)
         if form.is_valid() and form.clean_description():
             description = form.cleaned_data["description"]
             num_scenes = form.cleaned_data["num_scenes"]
             story_data = generate_story(description, num_scenes)
-
+            
             # Generate images for each scene
             for scene in story_data["story"]:
-                scene["image_url"] = generate_random_image(scene["prompt"])
+                torch.cuda.empty_cache()
+                scene["image_url"] = generate_image_using_prompt(scene["prompt"],pipe)
 
             # Save story data to session
             request.session["story_data"] = story_data
@@ -85,6 +95,13 @@ def generate_story_view(request):
 
     return render(request, "generate_story.html", {"form": form})
 
+
+def generate_image_using_prompt(prompt, pipe):
+    image = pipe(prompt, num_inference_steps=35).images[0]
+    image_name = f"{uuid.uuid4()}.png"
+    image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+    image.save(image_path)
+    return f"/media/{image_name}"
 
 # @csrf_exempt
 def generate_images(request):
@@ -123,25 +140,21 @@ def generate_images(request):
                 title = prompt_json[
                     "title"
                 ]  # Retrieve the title from API response if present
-
+        torch.cuda.empty_cache()
         # Load the StableDiffusionXLPipeline
         pipe = StableDiffusionXLPipeline.from_single_file(
-            "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
-            torch_dtype=torch.float16,
-            variant="fp16",
-            use_safetensors=True,
-        ).to("cuda")
+             "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
+             torch_dtype=torch.float16,
+             variant="fp16",
+             use_safetensors=True,
+         ).to("cuda")
 
-        # Generate images using the provided codew
+        # Generate images using the provided code
         image_urls = []
         for prompt in prompts:
-            image = pipe(prompt, num_inference_steps=1).images[0]
-            image_name = f"{uuid.uuid4()}.png"
-            image_path = os.path.join(settings.MEDIA_ROOT, image_name)
-            image.save(image_path)
-            image_urls.append(image_path)
-            # image_urls.append(generate_random_image("hello"))
-
+            torch.cuda.empty_cache()
+            image_urls.append(generate_image_using_prompt(prompt, pipe))
+            
         # Save story data in session for display
         request.session["story_data"] = {
             "title": title,
