@@ -125,20 +125,22 @@ def generate_images(request):
                 ]  # Retrieve the title from API response if present
 
         # Load the StableDiffusionXLPipeline
-        # pipe = StableDiffusionXLPipeline.from_single_file(
-        #     "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
-        #     torch_dtype=torch.float16,
-        #     variant="fp16",
-        #     use_safetensors=True,
-        # ).to("cuda")
+        pipe = StableDiffusionXLPipeline.from_single_file(
+            "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors",
+            torch_dtype=torch.float16,
+            variant="fp16",
+            use_safetensors=True,
+        ).to("cuda")
 
-        # Generate images using the provided code
+        # Generate images using the provided codew
         image_urls = []
         for prompt in prompts:
-            # image = pipe(prompt, num_inference_steps=1).images[0]
-            # image_path = save_image(image, prompt)
-            # image_urls.append(image_path)
-            image_urls.append(generate_random_image("hello"))
+            image = pipe(prompt, num_inference_steps=1).images[0]
+            image_name = f"{uuid.uuid4()}.png"
+            image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+            image.save(image_path)
+            image_urls.append(image_path)
+            # image_urls.append(generate_random_image("hello"))
 
         # Save story data in session for display
         request.session["story_data"] = {
