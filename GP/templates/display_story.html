@@ -17,7 +17,7 @@
                                 {% for scene in story_data.story %}
                                     <div class="scene-container{% if forloop.first %} active{% endif %}" style="display: none;">
                                         <div class="scene-content">
-                                            <img src="{{ scene.image_url }}" alt="Scene Image" class="img-fluid mb-3">
+                                            <img src="{{ scene.image_url }}" alt="Scene Image" class="fixed-dimensions mb-3">
                                             <p>{{ scene.paragraph }}</p>
                                         </div>
                                     </div>
@@ -202,6 +202,12 @@
             max-width: 100%;
             height: auto;
             margin-bottom: 20px;
+        }
+
+        .fixed-dimensions {
+            width: 400px; /* Fixed width */
+            height: 400px; /* Fixed height */
+            object-fit: cover; /* Ensures image covers the area */
         }
 
         .scene-content p {
