@@ -21,6 +21,9 @@
 
 ## Challenges and Solutions:
   One significant challenge we faced was ensuring consistency in character representation across different scenes. To address this:
-      1. Fine-Tuning with DreamBooth and LoRA: Enhanced the model to specialize in rendering specific subjects consistently.
-      2. Metadata Storage: Used metadata to maintain consistency in the appearance of characters and scenes.
-      3. Batch Generation: Improved the efficiency and consistency of image generation by optimizing GPU memory usage.
+  
+     1. Fine-Tuning with DreamBooth and LoRA: Enhanced the model to specialize in rendering specific subjects consistently.
+     
+     2. Metadata Storage: Used metadata to maintain consistency in the appearance of characters and scenes.
+      
+     3. Batch Generation: Improved the efficiency and consistency of image generation by optimizing GPU memory usage.
